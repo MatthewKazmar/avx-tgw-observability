@@ -18,7 +18,7 @@ variable "other_uses_cidr" {
   type        = string
 
   validation {
-    condition     = split("/", var.transit_cidr)[1] == "22"
+    condition     = split("/", var.other_uses_cidr)[1] == "22"
     error_message = "This module needs a /22."
   }
 }
