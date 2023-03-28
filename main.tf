@@ -46,11 +46,9 @@ data "aws_ec2_transit_gateway" "this" {
 }
 
 resource "aws_route" "route_tgw_connect" {
-  for_each = aws_vpc.this
-
   route_table_id         = module.transit.vpc.route_table_id[0]
   destination_cidr_block = data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0]
-  transit_gateway_id     = aws_ec2_transit_gateway.this.id
+  transit_gateway_id     = var.tgw_id
 }
 
 # Create TGW Connect Peers and Aviatrix GRE tunnel.
@@ -70,7 +68,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "ha" {
 
 resource "aviatrix_transit_external_device_conn" "this" {
   vpc_id            = module.transit.vpc.vpc_id
-  connection_name   = "${region_name_prefix}-to-tgw"
+  connection_name   = "${var.region_name_prefix}-to-tgw"
   gw_name           = module.transit.transit_gateway.gw_name
   connection_type   = "bgp"
   tunnel_protocol   = "GRE"
