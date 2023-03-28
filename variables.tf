@@ -23,6 +23,16 @@ variable "other_uses_cidr" {
   }
 }
 
+variable "avx_asn" {
+  description = "ASN for Aviatrix Transit Gateway"
+  type        = number
+
+  validation {
+    condition     = var.region_asn >= 64512 && var.region_asn <= 65534
+    error_message = "ASN must be between 64512 and 65534."
+  }
+}
+
 variable "tgw_id" {
   description = "Transit Gateway ID"
   type        = string
