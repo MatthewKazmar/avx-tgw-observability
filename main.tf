@@ -78,8 +78,8 @@ resource "aviatrix_transit_external_device_conn" "this" {
   remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
   backup_remote_gateway_ip = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
 
-  local_tunnel_cidr  = "169.254.100.1/30,169.254.5/30"
-  remote_tunnel_cidr = "169.254.100.2/30,169.254.6/30"
+  local_tunnel_cidr  = "169.254.100.1/30,169.254.100.5/30"
+  remote_tunnel_cidr = "169.254.100.2/30,169.254.100.6/30"
 
   ha_enabled                = true
   backup_local_tunnel_cidr  = "169.254.100.13/30, 169.254.100.9/30"
