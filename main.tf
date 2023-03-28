@@ -30,7 +30,7 @@ resource "aws_subnet" "this" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  subnet_ids         = aws_subnet.this[*].id
+  subnet_ids         = [ for k, v in aws_subnet.this: v.id ]
   vpc_id             = module.transit.vpc.vpc_id
   transit_gateway_id = var.tgw_id
 }
