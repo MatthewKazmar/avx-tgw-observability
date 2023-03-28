@@ -12,7 +12,7 @@ module "transit" {
   cloud           = "aws"
   region          = data.aws_region.current.name
   cidr            = local.transit_cidr
-  local_as_number = data.aws_ec2_transit_gateway.this.amazon_side_asn
+  local_as_number = var.avx_asn
   account         = var.aviatrix_account_name
 }
 
@@ -54,6 +54,7 @@ resource "aws_route" "route_tgw_connect" {
 # Create TGW Connect Peers and Aviatrix GRE tunnel.
 resource "aws_ec2_transit_gateway_connect_peer" "primary" {
   peer_address                  = module.transit.transit_gateway.private_ip
+  peer_asn = var.avx_asn
   transit_gateway_address       = cidrhost(data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0], 1)
   inside_cidr_blocks            = ["169.254.100.0/29"]
   transit_gateway_attachment_id = aws_ec2_transit_gateway_connect.this.id
@@ -61,6 +62,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "primary" {
 
 resource "aws_ec2_transit_gateway_connect_peer" "ha" {
   peer_address                  = module.transit.transit_gateway.ha_private_ip
+  peer_asn = var.avx_asn
   transit_gateway_address       = cidrhost(data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0], 2)
   inside_cidr_blocks            = ["169.254.100.8/29"]
   transit_gateway_attachment_id = aws_ec2_transit_gateway_connect.this.id
@@ -72,7 +74,7 @@ resource "aviatrix_transit_external_device_conn" "this" {
   gw_name           = module.transit.transit_gateway.gw_name
   connection_type   = "bgp"
   tunnel_protocol   = "GRE"
-  bgp_local_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
+  bgp_local_as_num  = var.avx_asn
   bgp_remote_as_num = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
   remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
