@@ -13,10 +13,10 @@ module "transit" {
 
 # Create TGW subnets, attachments, and TGW Connect routes.
 resource "aws_subnet" "this" {
-  for_each = {
-    "${var.region_name_prefix}-tgw-${count.index + 1}" = {
-      cidr_block = cidrsubnet(local.transit_cidr, 5, 14 + count.index)
-      az         = toset([for v in module.transit.vpc.subnets : regex("[a-z]{2}-[a-z]*-[0-9][a-z]", v.name)])[count.index]
+  for_each = { for i in range(0, 1):
+    "${var.region_name_prefix}-tgw-${i + 1}" => {
+      cidr_block = cidrsubnet(local.transit_cidr, 5, 14 + i)
+      az         = toset([for v in module.transit.vpc.subnets : regex("[a-z]{2}-[a-z]*-[0-9][a-z]", v.name)])[i]
     }
   }
 
