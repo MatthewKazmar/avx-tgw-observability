@@ -46,7 +46,7 @@ data "aws_ec2_transit_gateway" "this" {
 }
 
 resource "aws_route" "route_tgw_connect" {
-  route_table_id         = module.transit.vpc.route_table_id[0]
+  route_table_id         = module.transit.vpc.route_tables[0]
   destination_cidr_block = data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0]
   transit_gateway_id     = var.tgw_id
 }
