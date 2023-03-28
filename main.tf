@@ -1,6 +1,10 @@
 # Deploy Aviatrix Transit and bump in the wire on a AWS TGW.
 data "aws_region" "current" {}
 
+data "aws_ec2_transit_gateway" "this" {
+  id = var.tgw_id
+}
+
 module "transit" {
   source  = "terraform-aviatrix-modules/mc-transit/aviatrix"
   version = "2.4.1"
@@ -8,7 +12,7 @@ module "transit" {
   cloud           = "aws"
   region          = data.aws_region.current.name
   cidr            = local.transit_cidr
-  local_as_number = var.avx_asn
+  local_as_number = data.aws_ec2_transit_gateway.this.amazon_side_asn
   account         = var.aviatrix_account_name
 }
 
@@ -41,10 +45,6 @@ resource "aws_ec2_transit_gateway_connect" "this" {
   transit_gateway_id      = var.tgw_id
 }
 
-data "aws_ec2_transit_gateway" "this" {
-  id = var.tgw_id
-}
-
 resource "aws_route" "route_tgw_connect" {
   route_table_id         = module.transit.vpc.route_tables[0]
   destination_cidr_block = data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0]
@@ -72,7 +72,7 @@ resource "aviatrix_transit_external_device_conn" "this" {
   gw_name           = module.transit.transit_gateway.gw_name
   connection_type   = "bgp"
   tunnel_protocol   = "GRE"
-  bgp_local_as_num  = module.transit.transit_gateway.local_as_number
+  bgp_local_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
   bgp_remote_as_num = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
   remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
