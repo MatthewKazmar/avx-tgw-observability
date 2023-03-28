@@ -1,6 +1,6 @@
 variable "aviatrix_account_name" {
   description = "AWS account name on the Aviatrix Controller."
-  type = string
+  type        = string
 }
 
 variable "region_name_prefix" {
@@ -15,7 +15,7 @@ variable "region_name_prefix" {
 
 variable "other_uses_cidr" {
   description = "CIDR for transit gateway."
-  type = string
+  type        = string
 
   validation {
     condition     = split("/", var.transit_cidr)[1] == "22"
@@ -25,7 +25,7 @@ variable "other_uses_cidr" {
 
 variable "tgw_id" {
   description = "Transit Gateway ID"
-  type = string
+  type        = string
 }
 
 locals {

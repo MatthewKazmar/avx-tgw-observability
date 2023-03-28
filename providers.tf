@@ -1,10 +1,10 @@
 terraform {
   required_providers {
     aws = {
-      source                = "hashicorp/aws"
+      source = "hashicorp/aws"
     }
     aviatrix = {
-      source  = "aviatrixsystems/aviatrix"
+      source = "aviatrixsystems/aviatrix"
     }
   }
 }
