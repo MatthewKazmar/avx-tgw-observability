@@ -28,7 +28,7 @@ variable "avx_asn" {
   type        = number
 
   validation {
-    condition     = var.region_asn >= 64512 && var.region_asn <= 65534
+    condition     = var.avx_asn >= 64512 && var.avx_asn <= 65534
     error_message = "ASN must be between 64512 and 65534."
   }
 }
