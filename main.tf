@@ -18,7 +18,7 @@ module "transit" {
 
 # Create TGW subnets, attachments, and TGW Connect routes.
 resource "aws_subnet" "this" {
-  for_each = { for i in [0, 1]:
+  for_each = { for i in [0, 1] :
     "${var.region_name_prefix}-tgw-${i + 1}" => {
       cidr_block = cidrsubnet(local.transit_cidr, 5, 14 + i)
       az         = distinct([for v in module.transit.vpc.subnets : regex("[a-z]{2}-[a-z]*-[0-9][a-z]", v.name)])[i]
@@ -85,15 +85,65 @@ resource "aviatrix_transit_external_device_conn" "this" {
   bgp_local_as_num  = var.avx_asn
   bgp_remote_as_num = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
-  remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
+  remote_gateway_ip  = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
   local_tunnel_cidr  = "169.254.100.1/29,169.254.100.17/29"
   remote_tunnel_cidr = "169.254.100.2/29,169.254.100.18/29"
-  #local_tunnel_cidr  = "169.254.100.1/30,169.254.100.13/30"
-  #remote_tunnel_cidr = "169.254.100.2/30,169.254.100.14/30"
 
   ha_enabled                = true
-  backup_remote_gateway_ip = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
+  backup_remote_gateway_ip  = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
   backup_local_tunnel_cidr  = "169.254.100.25/29,169.254.100.9/29"
   backup_remote_tunnel_cidr = "169.254.100.26/29,169.254.100.10/29"
   backup_bgp_remote_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
+
+  manual_bgp_advertised_cidrs = ["10.0.0.0/8"]
+}
+
+# Create Avx TGW Connect's route table and associate it.
+resource "aws_ec2_transit_gateway_route_table" "avx" {
+  transit_gateway_id = var.tgw_id
+
+  tags = {
+    Name = "${var.region_name_prefix}-avx-rtb"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "avx" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
+}
+
+# Create new route table for the workload attachments and associate them.
+resource "aws_ec2_transit_gateway_route_table" "workload" {
+  transit_gateway_id = var.tgw_id
+
+  tags = {
+    Name = "${var.region_name_prefix}-workload-rtb"
+  }
+}
+
+data "aws_ec2_transit_gateway_vpc_attachments" "this" {
+  filter {
+    name   = "transit-gateway-id"
+    values = [var.tgw_id]
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "workload" {
+  for_each                       = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  transit_gateway_attachment_id  = each.value
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
+}
+
+# Propagate VPC prefixes to the Aviatrix Route Table.
+resource "aws_ec2_transit_gateway_route_table_propagation" "avx" {
+  for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+
+  transit_gateway_attachment_id  = each.value
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
+}
+
+# Propagate Aviatrix TGW Connect prefixes to workload Route Table.
+resource "aws_ec2_transit_gateway_route_table_propagation" "workload" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
