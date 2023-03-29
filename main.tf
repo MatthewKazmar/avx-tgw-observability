@@ -43,6 +43,12 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 resource "aws_ec2_transit_gateway_connect" "this" {
   transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this.id
   transit_gateway_id      = var.tgw_id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = "${var.region_name_prefix}-avx"
+  }
 }
 
 data "aws_route_tables" "this" {
@@ -57,6 +63,20 @@ resource "aws_route" "route_tgw_connect" {
   route_table_id         = data.aws_route_tables.this.ids[0]
   destination_cidr_block = data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0]
   transit_gateway_id     = var.tgw_id
+}
+
+# Create Avx TGW Connect's route table and associate it.
+resource "aws_ec2_transit_gateway_route_table" "avx" {
+  transit_gateway_id = var.tgw_id
+
+  tags = {
+    Name = "${var.region_name_prefix}-avx"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "avx" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
 
 # Create TGW Connect Peers and Aviatrix GRE tunnel.
@@ -96,20 +116,6 @@ resource "aviatrix_transit_external_device_conn" "this" {
   backup_bgp_remote_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
   manual_bgp_advertised_cidrs = ["10.0.0.0/8"]
-}
-
-# Create Avx TGW Connect's route table and associate it.
-resource "aws_ec2_transit_gateway_route_table" "avx" {
-  transit_gateway_id = var.tgw_id
-
-  tags = {
-    Name = "${var.region_name_prefix}-avx-rtb"
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table_association" "avx" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
 
 # Create new route table for the workload attachments and associate them.
