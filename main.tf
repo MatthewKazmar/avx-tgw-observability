@@ -45,8 +45,16 @@ resource "aws_ec2_transit_gateway_connect" "this" {
   transit_gateway_id      = var.tgw_id
 }
 
+data "aws_route_tables" "this" {
+  vpc_id = module.transit.vpc.vpc_id
+  filter {
+    name = "tag:${module.transit.vpc.name}"
+    values = ["Public-rtb"]
+  }
+}
+
 resource "aws_route" "route_tgw_connect" {
-  route_table_id         = module.transit.vpc.route_tables[0]
+  route_table_id         = data.aws_route_tables.this.ids[0]
   destination_cidr_block = data.aws_ec2_transit_gateway.this.transit_gateway_cidr_blocks[0]
   transit_gateway_id     = var.tgw_id
 }
