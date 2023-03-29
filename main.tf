@@ -50,7 +50,7 @@ resource "aws_ec2_transit_gateway_connect" "this" {
   transport_attachment_id                         = aws_ec2_transit_gateway_vpc_attachment.this.id
   transit_gateway_id                              = var.tgw_id
   transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = true
+  transit_gateway_default_route_table_propagation = false
 
   tags = {
     Name = "${var.region_name_prefix}-avx-connect"
@@ -129,27 +129,38 @@ resource "aviatrix_transit_external_device_conn" "this" {
   manual_bgp_advertised_cidrs = ["10.0.0.0/8"]
 }
 
-# Create new route table for the workload attachments and associate them.
-# resource "aws_ec2_transit_gateway_route_table" "workload" {
-#   transit_gateway_id = var.tgw_id
-
-#   tags = {
-#     Name = "${var.region_name_prefix}-avx-workload"
-#   }
-# }
-
-# resource "aws_ec2_transit_gateway_route_table_association" "workload" {
-#   for_each                       = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
-#   transit_gateway_attachment_id  = each.value
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
-# }
-
 # Get existing attachments for propagation.
 data "aws_ec2_transit_gateway_vpc_attachments" "this" {
   filter {
     name   = "transit-gateway-id"
     values = [var.tgw_id]
   }
+}
+
+# Create new route table for the workload attachments and associate them.
+resource "aws_ec2_transit_gateway_route_table" "workload" {
+  transit_gateway_id = var.tgw_id
+
+  tags = {
+    Name = "${var.region_name_prefix}-avx-workload"
+  }
+}
+
+resource "null_resource" "disassociate_default_tgw_rtb" {
+  for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  provisioner "local-exec" {
+    command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value};sleep 90"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "workload" {
+  for_each                       = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  transit_gateway_attachment_id  = each.value
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
+
+  depends_on = [
+    null_resource.disassociate_default_tgw_rtb
+  ]
 }
 
 # Propagate VPC prefixes to the Aviatrix Route Table.
@@ -160,8 +171,8 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "avx" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
 
-# # Propagate Aviatrix TGW Connect prefixes to workload Route Table.
-# resource "aws_ec2_transit_gateway_route_table_propagation" "workload" {
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
-# }
+# Propagate Aviatrix TGW Connect prefixes to workload Route Table.
+resource "aws_ec2_transit_gateway_route_table_propagation" "workload" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
+}
