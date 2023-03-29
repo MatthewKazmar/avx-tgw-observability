@@ -157,7 +157,7 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "avx" {
   for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
 
   transit_gateway_attachment_id  = each.value
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
 
 # # Propagate Aviatrix TGW Connect prefixes to workload Route Table.
