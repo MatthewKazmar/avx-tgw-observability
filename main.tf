@@ -39,7 +39,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   vpc_id                                          = module.transit.vpc.vpc_id
   transit_gateway_id                              = var.tgw_id
   transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = true
+  transit_gateway_default_route_table_propagation = false
 
   tags = {
     Name = "${var.region_name_prefix}-avx-vpc"
@@ -50,7 +50,7 @@ resource "aws_ec2_transit_gateway_connect" "this" {
   transport_attachment_id                         = aws_ec2_transit_gateway_vpc_attachment.this.id
   transit_gateway_id                              = var.tgw_id
   transit_gateway_default_route_table_association = false
-  transit_gateway_default_route_table_propagation = false
+  transit_gateway_default_route_table_propagation = true
 
   tags = {
     Name = "${var.region_name_prefix}-avx-connect"
