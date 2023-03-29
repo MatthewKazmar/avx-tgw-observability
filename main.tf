@@ -86,12 +86,14 @@ resource "aviatrix_transit_external_device_conn" "this" {
   bgp_remote_as_num = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
   remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
-  local_tunnel_cidr  = "169.254.100.1/30,169.254.100.13/30"
-  remote_tunnel_cidr = "169.254.100.2/30,169.254.100.14/30"
+  local_tunnel_cidr  = "169.254.100.1/29,169.254.100.17/29"
+  remote_tunnel_cidr = "169.254.100.2/29,169.254.100.18/29"
+  #local_tunnel_cidr  = "169.254.100.1/30,169.254.100.13/30"
+  #remote_tunnel_cidr = "169.254.100.2/30,169.254.100.14/30"
 
   ha_enabled                = true
   backup_remote_gateway_ip = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
-  backup_local_tunnel_cidr  = "169.254.100.5/30,169.254.100.9/30"
-  backup_remote_tunnel_cidr = "169.254.100.6/30,169.254.100.10/30"
+  backup_local_tunnel_cidr  = "169.254.100.25/29,169.254.100.9/29"
+  backup_remote_tunnel_cidr = "169.254.100.26/29,169.254.100.10/29"
   backup_bgp_remote_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
 }
