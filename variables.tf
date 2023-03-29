@@ -38,6 +38,11 @@ variable "tgw_id" {
   type        = string
 }
 
+variable "tgw_attachment_ids" {
+  description = "IDs of Transit Gateway Workload attachments."
+  type        = list(string)
+}
+
 locals {
   transit_cidr = cidrsubnet(var.other_uses_cidr, 1, 0)
 }
