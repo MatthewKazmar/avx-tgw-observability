@@ -48,7 +48,7 @@ resource "aws_ec2_transit_gateway_connect" "this" {
 data "aws_route_tables" "this" {
   vpc_id = module.transit.vpc.vpc_id
   filter {
-    name = "tag:${module.transit.vpc.name}"
+    name   = "tag:${module.transit.vpc.name}"
     values = ["Public-rtb"]
   }
 }
@@ -86,13 +86,12 @@ resource "aviatrix_transit_external_device_conn" "this" {
   bgp_remote_as_num = data.aws_ec2_transit_gateway.this.amazon_side_asn
 
   remote_gateway_ip        = aws_ec2_transit_gateway_connect_peer.primary.transit_gateway_address
-  backup_remote_gateway_ip = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
-
-  local_tunnel_cidr  = "169.254.100.1/30,169.254.100.5/30"
-  remote_tunnel_cidr = "169.254.100.2/30,169.254.100.6/30"
+  local_tunnel_cidr  = "169.254.100.1/30,169.254.100.9/30"
+  remote_tunnel_cidr = "169.254.100.2/30,169.254.100.10/30"
 
   ha_enabled                = true
-  backup_local_tunnel_cidr  = "169.254.100.13/30, 169.254.100.9/30"
-  backup_remote_tunnel_cidr = "169.254.100.14/30, 169.254.100.10/30"
+  backup_remote_gateway_ip = aws_ec2_transit_gateway_connect_peer.ha.transit_gateway_address
+  backup_local_tunnel_cidr  = "169.254.100.13/30,169.254.100.5/30"
+  backup_remote_tunnel_cidr = "169.254.100.14/30,169.254.100.6/30"
   backup_bgp_remote_as_num  = data.aws_ec2_transit_gateway.this.amazon_side_asn
 }
