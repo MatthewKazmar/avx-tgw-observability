@@ -80,12 +80,12 @@ resource "aws_ec2_transit_gateway_route_table" "avx" {
   }
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "avx-vpc" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
+resource "aws_ec2_transit_gateway_route_table_association" "avx_vpc" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this.id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "avx-connect" {
+resource "aws_ec2_transit_gateway_route_table_association" "avx_connect" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_connect.this.id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
 }
