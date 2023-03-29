@@ -168,7 +168,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "workload" {
 
 # Propagate VPC prefixes to the Aviatrix Route Table.
 resource "aws_ec2_transit_gateway_route_table_propagation" "avx" {
-  for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  #for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  for_each = toset([for v in var.tgw_attachment_ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
 
   transit_gateway_attachment_id  = each.value
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
