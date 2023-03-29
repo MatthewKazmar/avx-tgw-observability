@@ -148,8 +148,9 @@ resource "aws_ec2_transit_gateway_route_table" "workload" {
 
 resource "null_resource" "disassociate_default_tgw_rtb" {
   for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+
   provisioner "local-exec" {
-    command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value};sleep 90"
+    command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value} --region ${data.aws_region.current.name};sleep 90"
   }
 }
 
