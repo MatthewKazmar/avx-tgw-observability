@@ -138,8 +138,8 @@ data "aws_ec2_transit_gateway_vpc_attachments" "this" {
 }
 
 data "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  for_each = { for i, v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids: "attachment-${i}" => v }
-  id = each.value
+  for_each = { for i, v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : "attachment-${i}" => v }
+  id       = each.value
 }
 
 # Create new route table for the workload attachments and associate them.
@@ -153,7 +153,7 @@ resource "aws_ec2_transit_gateway_route_table" "workload" {
 
 resource "null_resource" "disassociate_default_tgw_rtb" {
   #for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
-  for_each = { for k, v in data.aws_ec2_transit_gateway_vpc_attachment.this: k => v if lookup(v.tags, "Name", "") != "${var.region_name_prefix}-avx-transit" }
+  for_each = { for k, v in data.aws_ec2_transit_gateway_vpc_attachment.this : k => v if lookup(v.tags, "Name", "") != "${var.region_name_prefix}-avx-transit" }
 
   provisioner "local-exec" {
     command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value} --region ${data.aws_region.current.name};sleep 90"
@@ -161,7 +161,8 @@ resource "null_resource" "disassociate_default_tgw_rtb" {
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "workload" {
-  for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  #for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  for_each = { for k, v in data.aws_ec2_transit_gateway_vpc_attachment.this : k => v if lookup(v.tags, "Name", "") != "${var.region_name_prefix}-avx-transit" }
 
   transit_gateway_attachment_id  = each.value
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.workload.id
@@ -173,7 +174,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "workload" {
 
 # Propagate VPC prefixes to the Aviatrix Route Table.
 resource "aws_ec2_transit_gateway_route_table_propagation" "avx" {
-  for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  #for_each = toset([for v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : v if v != aws_ec2_transit_gateway_vpc_attachment.this.id])
+  for_each = { for k, v in data.aws_ec2_transit_gateway_vpc_attachment.this : k => v if lookup(v.tags, "Name", "") != "${var.region_name_prefix}-avx-transit" }
 
   transit_gateway_attachment_id  = each.value
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.avx.id
