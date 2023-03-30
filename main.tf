@@ -10,14 +10,14 @@ module "transit" {
   version = "2.4.1"
 
   cloud           = "aws"
-  name            = "${var.region-name-prefix}-avx"
+  name            = "${var.region_name_prefix}-avx"
   region          = data.aws_region.current.name
   cidr            = local.transit_cidr
   local_as_number = var.avx_asn
   account         = var.aviatrix_account_name
 
   tags = {
-    Name = "${var.region-name-prefix}-avx"
+    Name = "${var.region_name_prefix}-avx"
   }
 }
 
