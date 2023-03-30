@@ -16,9 +16,9 @@ module "transit" {
   local_as_number = var.avx_asn
   account         = var.aviatrix_account_name
 
-  tags = {
-    Name = "${var.region_name_prefix}-avx"
-  }
+  # tags = {
+  #   Name = "${var.region_name_prefix}-avx"
+  # }
 }
 
 # Create TGW subnets, attachments, and TGW Connect routes.
