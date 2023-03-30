@@ -147,6 +147,11 @@ data "aws_ec2_transit_gateway_vpc_attachments" "this" {
     name   = "transit-gateway-id"
     values = [var.tgw_id]
   }
+  
+    filter {
+    name = "state"
+    values = ["available"]
+  }
 }
 
 # data "aws_ec2_transit_gateway_vpc_attachment" "this" {
@@ -161,6 +166,7 @@ data "aws_ec2_transit_gateway_attachment" "this" {
     name   = "resource-type"
     values = ["vpc"]
   }
+
   transit_gateway_attachment_id = each.value
 }
 
