@@ -10,10 +10,15 @@ module "transit" {
   version = "2.4.1"
 
   cloud           = "aws"
+  name            = "${region-name-prefix}-avx"
   region          = data.aws_region.current.name
   cidr            = local.transit_cidr
   local_as_number = var.avx_asn
   account         = var.aviatrix_account_name
+
+  tags = {
+    Name = "${region-name-prefix}-avx"
+  }
 }
 
 # Create TGW subnets, attachments, and TGW Connect routes.
