@@ -44,6 +44,13 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   tags = {
     Name = "${var.region_name_prefix}-avx-vpc"
   }
+
+  lifecycle {
+    ignore_changes = [
+      transit_gateway_default_route_table_association,
+      transit_gateway_default_route_table_propagation
+    ]
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "this" {
