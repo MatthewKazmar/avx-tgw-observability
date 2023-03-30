@@ -142,6 +142,14 @@ data "aws_ec2_transit_gateway_vpc_attachment" "this" {
   id       = each.value
 }
 
+data "aws_ec2_transit_gateway_route_table" "this" {
+  for_each = data.aws_ec2_transit_gateway_vpc_attachment.this
+  filter {
+    name   = "transit-gateway-attachment-id"
+    values = [each.value.id]
+  }
+}
+
 # Create new route table for the workload attachments and associate them.
 resource "aws_ec2_transit_gateway_route_table" "workload" {
   transit_gateway_id = var.tgw_id
@@ -156,7 +164,7 @@ resource "null_resource" "disassociate_default_tgw_rtb" {
   for_each = { for k, v in data.aws_ec2_transit_gateway_vpc_attachment.this : k => v if lookup(v.tags, "Name", "") != "${var.region_name_prefix}-avx-transit" }
 
   provisioner "local-exec" {
-    command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value.id} --region ${data.aws_region.current.name};sleep 90"
+    command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway_route_table.this[each.key].id} --transit-gateway-attachment-id ${each.value.id} --region ${data.aws_region.current.name};sleep 90"
   }
 
   lifecycle {
