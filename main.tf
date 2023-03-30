@@ -171,7 +171,7 @@ resource "null_resource" "disassociate_default_tgw_rtb" {
 
   lifecycle {
     replace_triggered_by = [
-      aws_ec2_transit_gateway_attachment.this
+      data.aws_ec2_transit_gateway_attachment.this
     ]
   }
 }
