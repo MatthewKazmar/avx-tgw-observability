@@ -158,6 +158,12 @@ resource "null_resource" "disassociate_default_tgw_rtb" {
   provisioner "local-exec" {
     command = "aws ec2 disassociate-transit-gateway-route-table --transit-gateway-route-table-id ${data.aws_ec2_transit_gateway.this.association_default_route_table_id} --transit-gateway-attachment-id ${each.value.id} --region ${data.aws_region.current.name};sleep 90"
   }
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_ec2_transit_gateway_route_table_association.workload
+    ]
+  }
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "workload" {
