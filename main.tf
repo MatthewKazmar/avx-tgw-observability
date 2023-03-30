@@ -142,7 +142,7 @@ data "aws_ec2_transit_gateway_vpc_attachments" "this" {
 #   id       = each.value
 # }
 
-data "aws_ec2_transit_gateway_attachment" {
+data "aws_ec2_transit_gateway_attachment" "this" {
   for_each = { for i, v in data.aws_ec2_transit_gateway_vpc_attachments.this.ids : "attachment-${i}" => v }
 
   filter {
